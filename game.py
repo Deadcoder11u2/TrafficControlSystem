@@ -1,14 +1,11 @@
+from fileinput import hook_encoded
 from random import Random, random
 from matplotlib.pyplot import draw
 import pygame
 from pygame import gfxdraw
 from time import time
 from random import *
-# class Car:
-#     def __init__(x_corr, y_coor):
-#         self.x_coor = x_coor
-#         self.y_coor = y_coor
-# Colors
+
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
@@ -16,6 +13,11 @@ CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
+
+
+def draw_lines(lines):
+    for line in lines:
+        pygame.draw.line(screen, (0, 0, 0), line[0], line[1], 2)
 
 # Initialize the game
 pygame.init()
@@ -25,15 +27,43 @@ screen = pygame.display.set_mode((1245, 636))
 
 pygame.display.set_caption("Space Invaders")
 
-placed_cars = []
+placed_cars = [[(977, 100), ("D")]]
 
 speed = 1
 
+# padding lines 
+#horizontal padding
+hori_padding = [
+    #down paddings
+    [(75, 175), (110, 175), ("R")],
+    [(451, 180), (480, 180), ("R")],
+    [(948, 180), (1005, 180), ("R", "D")],
+    [(273, 425), (314, 425), ("R")],
+    [(948, 530), (1007, 530), ("R", "D")],
+    # upp paddings
+    [(274, 250), (234, 250), ("L")],
+    [(663, 238), (623, 238), "L"],
+    [(948, 238), (885, 238), ("L", "U")],
+    [(663, 452), (628, 452), ("L")],
+    [(130, 456), (94, 456), ("L")]
+]
+
+def check_point_on_hor_line(line, point):
+    x1 = min(line[0][0], line[1][0])
+    x2 = max(line[0][0], line[1][0])
+    if point[0] >= x1 and point[0] <= x2 and point[1] == line[0][1]:
+        return True
+    else:
+        return False
 
 def render_existing_cars():
     global placed_cars
     new_placed = []
     for coor in placed_cars:
+        if coor[1] == 'U' or coor[1] == 'D':
+            for padding in hori_padding:
+                if check_point_on_hor_line((padding[0], padding[1]), coor[0]):
+                    coor[1] = padding[2][randint(0, len(padding[2]) - 1)]
         x = coor[0][0]
         y = coor[0][1]
         if coor[1] == 'R':
@@ -64,6 +94,7 @@ valid_points_to_generate = [
     [(1234, 550), (1233, 573), "L"],
     [(950, 624), (997, 625), "U"],
     [(633, 625), (657, 628), "U"]
+    # [(948, 29), (1002, 29), ("D")]
 ]
 
 
@@ -120,9 +151,6 @@ def draw_road():
         [(160, 470), (630, 470)],
         [(630, 470), (630, 630)]
     ]
-    for line in road:
-        pygame.draw.line(screen, (0, 0, 0), line[0], line[1], 2)
-
 
 running = True
 image = pygame.image.load(r'road.png')
@@ -135,12 +163,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             break
+    draw_lines(hori_padding)
     render_existing_cars()
     draw_road()
     now_time = time()
-    screen.blit(car, (0, 200))
-    # rand_car()
-    if(now_time - start_time > 2):
+    if(now_time - start_time > 1):
         rand_car()
         start_time = now_time
     pygame.display.update()
