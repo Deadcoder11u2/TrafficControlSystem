@@ -1,6 +1,14 @@
+from random import Random
+from matplotlib.pyplot import draw
 import pygame 
 from pygame import gfxdraw
+from random import randint
+from time import  time
 
+# class Car:
+#     def __init__(x_corr, y_coor):
+#         self.x_coor = x_coor
+#         self.y_coor = y_coor
 #Colors 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -18,18 +26,52 @@ screen = pygame.display.set_mode((1245, 636))
 
 pygame.display.set_caption("Space Invaders")
 
-# Function to draw a circle
-def draw_circle(x, y, color):
-    pygame.draw.circle(screen, color, (x, y), 5, 5)
+placed_cars = []
+
+def render_existing_cars():
+    for coor in placed_cars:
+        x = coor[0][0]
+        y = coor[0][1]
+        if coor[1] == 'R':
+            x += 1
+        elif coor[1] == 'L':
+            x -= 1
+        elif coor[1] == 'D':
+            y += 1
+        else:
+            y -= 1
+        coor[0] = [x, y]
+        pygame.draw.circle(screen, BLUE, (x, y), 5, 5)
 
 valid_points_to_generate = [
-    [(0, 170), (0, 260)],
-    [(0, 410), (0, 470)],
-    [(100, 600), (160, 600)],
-    [(630, 600), (700, 600)],
-    [(417, 0), (480, 0)],
-    [(1240, 515), (1242, 574)],
+    [(0, 170), (0, 215), "R"],           # Vertical line
+    [(0,215) , (0,260),"L"],
+    [(0, 410), (0, 440), "V"],           # Vertical line
+    [(0, 440), (0, 470), "V"],
+    [(100, 600), (130, 600), "H"],       # Horizontal line
+    [(130, 600), (160, 600), "H"],
+    [(630, 600), (665, 600), "H"],       # Horizontal line
+    [(665, 600), (700, 600), "H"],
+    [(417, 0), (448, 0), "H"],           # Horizontal line
+    [(448, 0), (480, 0), "H"],
+    [(1242, 515), (1242, 544), "V"],     # Vertical line
+    [(1242, 544), (1242, 574), "V"],
 ]
+
+def rand_car():
+    idx = randint(0, len(valid_points_to_generate) - 1)
+    line = valid_points_to_generate[idx]
+    x, y = -1, -1
+    if line[2] == "V":
+        x = line[0][0]
+        y = randint(line[0][1], line[1][1])
+    else:
+        y = line[0][1]
+        x = randint(line[0][0], line[1][0])
+    print(line, x, y)
+    placed_cars.append([[x, y], "D"])
+
+
 
 def draw_valid_points():
     for i in valid_points_to_generate:
@@ -38,7 +80,7 @@ def draw_valid_points():
 # Function to draw all the roads
 def draw_road():
     road = [
-        [(0, 170), (42, 170)],
+        [(0, 170), (42, 170), "H"],
         [(42, 0), (42, 170)],
         [(0, 260), (240, 260)],
         [(0, 410), (240, 410)],
@@ -76,12 +118,22 @@ def draw_road():
 
 running = True 
 image = pygame.image.load(r'road.png')
+car = pygame.image.load(r'car_1.png')
+start_time = time()
+
 while running:
     screen.blit(image,(0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             break
+    render_existing_cars()
     draw_road()
-    draw_valid_points()
+    now_time = time()
+    screen.blit(car, (0, 200))
+    # rand_car()
+    if(now_time - start_time > 4):
+        rand_car()
+        print("PRINTING")
+        start_time = now_time
     pygame.display.update()
