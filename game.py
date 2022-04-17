@@ -5,6 +5,7 @@ import pygame
 from pygame import gfxdraw
 from time import time
 from random import *
+import random
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -15,9 +16,32 @@ SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
 
 
+class Car:
+    def __init__(self, coorX, coorY, direction):
+        # Current coordinates of the car
+        self.coorX = coorX
+        self.coorY = coorY
+
+        # the direction in which the car is moving
+        self.direction = direction
+
+        # flag to stop the car when the signal is red
+        self.stop = False
+
+        # whether the car has passed the padding region
+        self.toChange = False
+
+        # if it has crossed the padding region then in which direction it should move
+        self.nextDirection = "?"
+
+        # if it has crossed the padding region then after what distance the direction should change
+        self.nextChangeDistance = 0
+
+
 def draw_lines(lines):
     for line in lines:
         pygame.draw.line(screen, (0, 0, 0), line[0], line[1], 2)
+
 
 # Initialize the game
 pygame.init()
@@ -25,65 +49,130 @@ pygame.init()
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
 
+
+class Padding:
+    def __init__(self, fPoint, sPoint, padDist, directionList):
+        self.fPoint = fPoint
+        self.sPoint = sPoint
+        self.padDist = padDist
+        self.directionList = directionList
+
+    def __str__(self) -> str:
+        return str(self.fPoint) + str(self.sPoint) + str(self.padDist) + str(self.directionList)
+
+    def draw_padding(self):
+        pygame.draw.line(screen, CYAN, self.fPoint, self.sPoint)
+        nfPoint = (self.fPoint[0], self.fPoint[1]+self.padDist)
+        nsPoint = (self.sPoint[0], self.sPoint[1] + self.padDist)
+        pygame.draw.line(screen, CYAN, nfPoint, nsPoint)
+
+
 pygame.display.set_caption("Space Invaders")
 
-placed_cars = [[(977, 100), ("D")]]
+placed_cars = []
 
+# what should be the speed of the cars
 speed = 1
 
-# padding lines 
-#horizontal padding
-hori_padding = [
-    #down paddings
-    [(75, 175), (110, 175), ("R")],
-    [(451, 180), (480, 180), ("R")],
-    [(948, 180), (1005, 180), ("R", "D")],
-    [(273, 425), (314, 425), ("R")],
-    [(948, 530), (1007, 530), ("R", "D")],
-    # upp paddings
-    [(274, 250), (234, 250), ("L")],
-    [(663, 238), (623, 238), "L"],
-    [(948, 238), (885, 238), ("L", "U")],
-    [(663, 452), (628, 452), ("L")],
-    [(130, 456), (94, 456), ("L")]
-]
+horizontal_paddings = []
+vertical_paddings = []
+
+def initialize_padding():
+    global horizontal_paddings, vertical_paddings
+    # padding lines
+    # horizontal padding
+    hori_padding = [
+        # down paddings
+        [(75, 170), (105, 170), ("R"), 40],
+        [(451, 170), (480, 170), ("R"), 40],
+        [(948, 170), (1005, 170), ("R", "D"), 40],
+        [(273, 413), (310, 413), ("R"), 21],
+        [(948, 515), (1007, 515), ("R", "D"), 40],
+        # upp paddings
+        [(274, 260), (234, 260), ("L"), -40],
+        [(663, 260), (623, 260), "L", -40],
+        [(948, 260), (885, 260), ("L", "U"), -40],
+        [(663, 468), (628, 468), ("L", "U"), -25],
+        [(130, 468), (94, 468), ("L"), -25]
+    ]
+
+    veri_paddings = [
+        # Right paddings
+        [(44, 214), (44, 170), ("U", "R"), 20],
+        [(417, 214), (417, 170), ("U", "R"), 20],
+        [(894, 214), (894, 170), ("U", "R"), 40],
+        [(238, 438), (238, 410), ("U"), 20],
+        [(627, 439), (627, 411), ("U"), 20],
+        # Left paddings
+        [(307, 264), (307, 217), ("D", "L"), -20],
+        [(696, 264), (696, 217), ("D", "L"), -20],
+        [(1001, 264), (1001, 217), ("D", "L"), -40],
+        [(1001, 578), (1001, 550), ("D"), -20],
+        [(162, 471), (162, 440), ("D", "L"), -20]
+    ]
+    for line in hori_padding:
+        horizontal_paddings.append(Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
+    for line in veri_paddings:
+        vertical_paddings.append(Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
 
 def check_point_on_hor_line(line, point):
     x1 = min(line[0][0], line[1][0])
     x2 = max(line[0][0], line[1][0])
     if point[0] >= x1 and point[0] <= x2 and point[1] == line[0][1]:
         return True
-    else:
-        return False
+    return False
+
+def check_point_on_ver_line(line, point):
+    y1 = min(line[0][1], line[1][1]);
+    y2 = max(line[0][1], line[1][1])
+    if point[1] >= y1 and point[1] <= y2 and point[0] == line[0][0]:
+        return True
+    return False
 
 def render_existing_cars():
     global placed_cars
     new_placed = []
-    for coor in placed_cars:
-        if coor[1] == 'U' or coor[1] == 'D':
-            for padding in hori_padding:
-                if check_point_on_hor_line((padding[0], padding[1]), coor[0]):
-                    coor[1] = padding[2][randint(0, len(padding[2]) - 1)]
-        x = coor[0][0]
-        y = coor[0][1]
-        if coor[1] == 'R':
+    for car in placed_cars:
+        if car.direction == 'U' or car.direction == 'D':
+            for padding in horizontal_paddings:
+                if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
+                    car.toChange = True
+                    car.nextDirection = random.choice(padding.directionList)
+                    car.nextChangeDistance = randint(3, abs(padding.padDist))
+        else:
+            for padding in vertical_paddings:
+                if check_point_on_ver_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
+                    car.toChange = True
+                    car.nextDirection = random.choice(padding.directionList)
+                    car.nextChangeDistance = randint(3, abs(padding.padDist))
+        x = car.coorX
+        y = car.coorY
+        if car.toChange:
+            if car.nextChangeDistance == 0:
+                car.direction =  car.nextDirection
+                car.nextDirection = "?"
+                car.nextChangeDistance = 0
+                car.toChange = False
+            else:
+                car.nextChangeDistance -= speed
+        if car.direction == 'R':
             x += speed
-        elif coor[1] == 'L':
+        elif car.direction == 'L':
             x -= speed
-        elif coor[1] == 'D':
+        elif car.direction == 'D':
             y += speed
         else:
             y -= speed
-        coor[0] = [x, y]
+        car.coorX, car.coorY = x, y
         if x > 1245 or x < 0 or y > 636 or y < 0:
             continue
-        new_placed.append(coor)
+        new_placed.append(car)
         pygame.draw.circle(screen, BLUE, (x, y), 5, 5)
     placed_cars = new_placed
 
 
 valid_points_to_generate = [
-    # points where cars can generate added padding 
+    # points where cars can generate added padding
     [(0, 174), (0, 210), "R"],
     [(78, 2), (103, 2), "D"],
     [(2, 412), (2, 435), "R"],
@@ -109,13 +198,16 @@ def rand_car():
         y = line[0][1]
         x = randint(min(line[0][0], line[1][0]), max(line[0][0], line[1][0]))
     print(line, x, y)
-    placed_cars.append([[x, y], line[2]])
+    placed_cars.append(Car(coorX=x, coorY=y, direction=line[2]))
+
 
 def draw_valid_points():
     for i in valid_points_to_generate:
         pygame.draw.line(screen, CYAN, i[0], i[1])
 
 # Function to draw all the roads
+
+
 def draw_road():
     road = [
         [(0, 170), (42, 170), "H"],
@@ -152,18 +244,26 @@ def draw_road():
         [(630, 470), (630, 630)]
     ]
 
+
 running = True
 image = pygame.image.load(r'road.png')
 car = pygame.image.load(r'car_1.png')
 start_time = time()
 
+initialize_padding()
+
+    
+for temp in horizontal_paddings:
+    print(temp)
 while running:
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             break
-    draw_lines(hori_padding)
+    for i in horizontal_paddings:
+        i.draw_padding()
+    # draw_lines(hori_padding)
     render_existing_cars()
     draw_road()
     now_time = time()
