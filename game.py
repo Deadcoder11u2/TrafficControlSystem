@@ -1,8 +1,5 @@
-from fileinput import hook_encoded
 from random import Random, random
-from matplotlib.pyplot import draw
 import pygame
-from pygame import gfxdraw
 from time import time
 from random import *
 import random
@@ -72,7 +69,7 @@ pygame.display.set_caption("Space Invaders")
 placed_cars = []
 
 # what should be the speed of the cars
-speed = 1
+speed = 0.5
 
 horizontal_paddings = []
 vertical_paddings = []
@@ -243,6 +240,8 @@ def draw_road():
         [(160, 470), (630, 470)],
         [(630, 470), (630, 630)]
     ]
+    for line in road:
+        pygame.draw.line(screen, LIME, line[0], line[1])
 
 
 running = True
@@ -257,15 +256,15 @@ for temp in horizontal_paddings:
     print(temp)
 while running:
     screen.blit(image, (0, 0))
+    # draw_road()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             break
-    for i in horizontal_paddings:
-        i.draw_padding()
+    # for i in horizontal_paddings:
+    #     i.draw_padding()
     # draw_lines(hori_padding)
     render_existing_cars()
-    draw_road()
     now_time = time()
     if(now_time - start_time > 1):
         rand_car()
