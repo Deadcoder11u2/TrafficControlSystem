@@ -53,7 +53,8 @@ class Padding:
         self.sPoint = sPoint
         self.padDist = padDist
         self.directionList = directionList
-
+        # self.road_no = self.road_no
+        
     def __str__(self) -> str:
         return str(self.fPoint) + str(self.sPoint) + str(self.padDist) + str(self.directionList)
 
@@ -69,7 +70,7 @@ pygame.display.set_caption("Space Invaders")
 placed_cars = []
 
 # what should be the speed of the cars
-speed = 0.5
+speed = 1
 
 horizontal_paddings = []
 vertical_paddings = []
@@ -178,9 +179,8 @@ valid_points_to_generate = [
     [(955, 41), (996, 41), "D"],
     [(1231, 221), (1231, 256), "L"],
     [(1234, 550), (1233, 573), "L"],
-    [(950, 624), (997, 625), "U"],
-    [(633, 625), (657, 628), "U"]
-    # [(948, 29), (1002, 29), ("D")]
+    [(633, 625), (657, 628), "U"],
+    [(895, 630), (940, 630), "U"]
 ]
 
 
@@ -194,15 +194,12 @@ def rand_car():
     else:
         y = line[0][1]
         x = randint(min(line[0][0], line[1][0]), max(line[0][0], line[1][0]))
-    print(line, x, y)
     placed_cars.append(Car(coorX=x, coorY=y, direction=line[2]))
 
 
 def draw_valid_points():
     for i in valid_points_to_generate:
         pygame.draw.line(screen, CYAN, i[0], i[1])
-
-# Function to draw all the roads
 
 
 def draw_road():
@@ -252,21 +249,21 @@ start_time = time()
 initialize_padding()
 
     
-for temp in horizontal_paddings:
-    print(temp)
 while running:
     screen.blit(image, (0, 0))
-    # draw_road()
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT:   
             running = False
             break
-    # for i in horizontal_paddings:
-    #     i.draw_padding()
-    # draw_lines(hori_padding)
     render_existing_cars()
     now_time = time()
-    if(now_time - start_time > 1):
+    if(now_time - start_time > 0.5):
+        rand_car()
+        rand_car()
+        rand_car()
+        rand_car()
+        rand_car()
+        rand_car()
         rand_car()
         start_time = now_time
     pygame.display.update()
