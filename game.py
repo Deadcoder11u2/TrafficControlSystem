@@ -12,6 +12,11 @@ MAGENTA = (255, 0, 255)
 SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
 
+class Signal:
+    def __init__(self, isRed, road_no):
+        self.isRed = isRed
+        self.road_no = road_no
+        self.nextStopDistance = 4
 
 class Car:
     def __init__(self, coorX, coorY, direction):
@@ -252,7 +257,7 @@ initialize_padding()
 while running:
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:   
+        if event.type == pygame.QUIT:
             running = False
             break
     render_existing_cars()
