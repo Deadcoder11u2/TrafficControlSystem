@@ -21,13 +21,17 @@ screen = pygame.display.set_mode((1245, 636))
 
 
 class Signal:
-    def __init__(self, isRed, road_no, coors):
+    def __init__(self, isRed, road_no, coors, barrier):
         self.coors = coors
         self.isRed = isRed
         self.road_no = road_no
         self.wait_time = 0
         self.number_of_cars = 0
-        self.barrier = (1, 1)
+        self.barrier = barrier
+        self.static_barrier = barrier
+        self.cap_of_barrier = 5
+        self.hori_delta = 0
+        self.veri_delta = 0
 
 
 class Car:
@@ -55,14 +59,16 @@ class Car:
         self.color = color
 
         # in which signal the car is standing
-        self.signal_no= signal_no
-        
-        # number of signal after the direction is changed 
+        self.signal_no = signal_no
+
+        # number of signal after the direction is changed
         self.next_signal_no = -1
+
 
 def draw_lines(lines):
     for line in lines:
         pygame.draw.line(screen, (0, 0, 0), line[0], line[1], 2)
+
 
 class Padding:
     def __init__(self, fPoint, sPoint, padDist, directionList):
@@ -83,8 +89,8 @@ class Padding:
 
     def draw_veri_padding(self):
         pygame.draw.line(screen, CYAN, self.fPoint, self.sPoint)
-        nfPoint = (self.fPoint[0] + self.padDist , self.fPoint[1])
-        nsPoint = (self.sPoint[0] + self.padDist , self.sPoint[1])
+        nfPoint = (self.fPoint[0] + self.padDist, self.fPoint[1])
+        nsPoint = (self.sPoint[0] + self.padDist, self.sPoint[1])
         pygame.draw.line(screen, CYAN, nfPoint, nsPoint)
 
 
@@ -105,32 +111,32 @@ def initialize_padding():
     # horizontal padding
     hori_padding = [
         # down paddings
-        [(75, 170), (105, 170), (("R", 3), ("R", 3)), 40],
-        [(451, 170), (480, 170), (("R", 5), ("R", 5)), 40],
-        [(948, 170), (1005, 170), (("R", 0), ("D", 7)), 40],
-        [(273, 413), (310, 413), (("R", 14), ("R", 14)), 21],
-        [(948, 515), (1007, 515), (("R", 0), ("D", 0)), 40],
+        [(75, 170), (105, 170), (("R", (3, -1)), ("R", (3, -1))), 40],
+        [(451, 170), (480, 170), (("R", (5, 0)), ("R", (5, 0))), 40],
+        [(948, 170), (1005, 170), (("R", (0, -1)), ("D", (7, -1))), 40],
+        [(273, 413), (310, 413), (("R", (14, -1)), ("R", (14, -1))), 21],
+        [(948, 515), (1007, 515), (("R", (0, -1)), ("D", (0, -1))), 40],
         # upp paddings
-        [(274, 260), (234, 260), (("L", 0), ("L", 0)), -40],
-        [(663, 260), (623, 260), (("L", 11), ("L", 11)), -40],
-        [(948, 260), (885, 260), (("L", 9), ("U", 0)), -40],
-        [(663, 468), (628, 468), (("L", 17), ("U", 10)), -25],
-        [(130, 468), (94, 468), (("L", 0), ("L", 0)), -25]
+        [(274, 260), (234, 260), (("L", (0, -1)), ("L", (0, -1))), -40],
+        [(663, 260), (623, 260), (("L", (11, -1)), ("L", (11, -1))), -40],
+        [(948, 260), (885, 260), (("L", (9, -1)), ("U", (0, -1))), -40],
+        [(663, 468), (628, 468), (("L", (17, -1)), ("U", (10, -1))), -25],
+        [(130, 468), (94, 468), (("L", (0, -1)), ("L", (0, -1))), -25]
     ]
 
     veri_paddings = [
         # Right paddings
-        [(44, 214), (44, 170), (("U", 0), ("R", 3)), 20],
-        [(417, 214), (417, 170), (("U", 0), ("R", 5)), 20],
-        [(894, 214), (894, 170), (("U", 0), ("R", 0)), 40],
-        [(238, 438), (238, 410), (("U", 12), ("U", 12)), 20],
-        [(627, 439), (627, 411), (("U", 10), ("U", 10)), 20],
+        [(44, 214), (44, 170), (("U", (0, -1)), ("R", (3, -1))), 20],
+        [(417, 214), (417, 170), (("U", (0, -1)), ("R", (5, 0))), 20],
+        [(894, 214), (894, 170), (("U", (0, -1)), ("R", (0, -1))), 40],
+        [(238, 438), (238, 410), (("U", (12, -1)), ("U", (12, -1))), 20],
+        [(627, 439), (627, 411), (("U", (10, -1)), ("U", (10, -1))), 20],
         # Left paddings
-        [(307, 264), (307, 217), (("D", 16), ("L", 0)), -20],
-        [(696, 264), (696, 217), (("D", 0), ("L", 11)), -20],
-        [(1001, 264), (1001, 217), (("D", 7), ("L", 9)), -40],
-        [(1001, 578), (1001, 550), (("D", 0), ("D", 0)), -20],
-        [(162, 471), (162, 440), (("D", 0), ("L", 0)), -20]
+        [(307, 264), (307, 217), (("D", (16, -1)), ("L", (0, -1))), -20],
+        [(696, 264), (696, 217), (("D", (0, -1)), ("L", (11, -1))), -20],
+        [(1001, 264), (1001, 217), (("D", (7, -1)), ("L", (9, -1))), -40],
+        [(1001, 578), (1001, 550), (("D", (0, -1)), ("D", (0, -1))), -20],
+        [(162, 471), (162, 440), (("D", (0, -1)), ("L", (0, -1))), -20]
     ]
     for line in hori_padding:
         horizontal_paddings.append(
@@ -139,52 +145,63 @@ def initialize_padding():
         vertical_paddings.append(
             Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
 
+
 signals = []
-
-
 
 
 def initialize_signals():
     coordinates = [
-        [(36, 192), ((30, 214), (30, 170))],
-        [(92, 154), ((74, 160), (108, 160))],
-        [(395, 193), ((409, 216), (409, 169))],
-        [(467, 146), ((451, 163), (480, 163))],
-        [(865, 193), ((889, 215), (889, 169)), (1020, 230), ((1009, 216), (1009, 264))],
-        [(977, 156), ((894, 272), (947, 272)) ,(924, 272), ((949, 162), (999, 162))],
-        [(977, 480), ((950, 500), (999, 500))],
-        [(1030, 568), ((1008, 548), (1008, 577))],
-        [(715, 236), ((699, 265), (699, 237))],
-        [(648, 280), ((627, 272), (667, 272))],
-        [(332, 236), ((314, 261),(213, 216))],
-        [(254, 288), ((237, 269), (271, 269))],
-        [(645, 500), ((628, 480), (663, 480))],
-        [(608, 425), ((619, 410), (619, 438))],
-        [(209, 425), ((232, 408), (232, 438))],
-        [(293, 387), ((273, 396), (306, 296))],
-        [(189, 457), ((171, 440), (171, 471))],
-        [(115, 497), ((97, 476), (132, 476))]
+        [(36, 192, (-10, 0)), ((30, 214), (30, 170))],
+        [(92, 154, (0, -10)), ((74, 160), (108, 160))],
+        [(395, 193, (-10, 0)), ((409, 216), (409, 169))],
+        [(467, 146, (0, -10)), ((451, 163), (480, 163))],
+        [(865, 193, (-10, 0)), ((889, 215), (889, 169)),
+         (1020, 230, (10, 0)), ((1009, 216), (1009, 264))],
+        [(924, 272, (0, -10)), ((949, 162), (999, 162)),
+         (977, 156, (0, 10)), ((894, 272), (947, 272))],
+        [(977, 480, (0, -10)), ((950, 500), (999, 500))],
+        [(1030, 568, (10, 0)), ((1008, 548), (1008, 577))],
+        [(715, 236, (10, 0)), ((699, 265), (699, 237))],
+        [(648, 280, (0, 10)), ((627, 272), (667, 272))],
+        [(332, 236, (0, 10)), ((314, 261), (213, 216))],
+        [(254, 288, (-10, 0)), ((237, 269), (271, 269))],
+        [(645, 500, (0, 10)), ((628, 480), (663, 480))],
+        [(608, 425, (-10, 0)), ((619, 410), (619, 438))],
+        [(209, 425, (-10, 0)), ((232, 408), (232, 438))],
+        [(293, 387, (0, -10)), ((273, 396), (306, 296))],
+        [(189, 457, (10, 0)), ((171, 440), (171, 471))],
+        [(115, 497, (0, 10)), ((97, 476), (132, 476))]
     ]
     cnt = 0
-    signals.append(Signal(isRed=False, road_no=0, coors=((-5, -5), (-5, -5))))
+    signals.append(Signal(isRed=False, road_no=0, coors=(
+        (-5, -5), (-5, -5)), barrier=(-10, -10)))
     for cnt in range(1, len(coordinates)+1):
+        temp = coordinates[cnt-1]
         if cnt == 5:
-            signals.append(Signal(isRed=cnt%2==1, road_no=5, coors=(coordinates[cnt-1][0], coordinates[cnt-1][2])))
+            signals.append(Signal(isRed=True, road_no=5, coors=(
+                coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
         if cnt == 6:
-            signals.append(Signal(isRed=cnt%2==1, road_no=6,coors=(coordinates[cnt-1][0], coordinates[cnt-1][2])))
+            signals.append(Signal(isRed=not True, road_no=6, coors=(
+                coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
-        signals.append(Signal(isRed=cnt%2==1, road_no=cnt, coors=(coordinates[cnt-1][0], coordinates[cnt-1][0])))
+        # signals.append(Signal(isRed=not True, road_no=cnt, coors=(
+        #     coordinates[cnt-1][0][0], coordinates[cnt-1][0][1]), barrier=coordinates[cnt-1][1]))
+        signals.append(Signal(isRed=not True, road_no=cnt, coors=(
+            (temp[0]), (temp[0][0], temp[0][1], temp[0][2])), barrier=temp[1]))
+
 
 def render_signals():
     for sig in signals:
         if sig == "Srikanth":
             continue
+        # print(sig.coors)
         for i in sig.coors:
             if sig.isRed:
-                pygame.draw.circle(screen, RED, i, 20, 30)
+                pygame.draw.circle(screen, RED, (i[0], i[1]), 20, 30)
             else:
-                pygame.draw.circle(screen, GREEN, i, 20, 30)
+                pygame.draw.circle(screen, GREEN, (i[0], i[1]), 20, 30)
+
 
 def check_point_on_hor_line(line, point):
     x1 = min(line[0][0], line[1][0])
@@ -202,12 +219,11 @@ def check_point_on_ver_line(line, point):
     return False
 
 
-
 def render_existing_cars():
     global placed_cars
     new_placed = []
     for car in placed_cars:
-        if not signals[car.signal_no].isRed:
+        if not signals[car.signal_no[0]].isRed:
             if car.direction == 'U' or car.direction == 'D':
                 for padding in horizontal_paddings:
                     if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
@@ -215,7 +231,8 @@ def render_existing_cars():
                         tt = random.choice(padding.directionList)
                         car.nextDirection = tt[0]
                         car.next_signal_no = tt[1]
-                        car.nextChangeDistance = randint(3, abs(padding.padDist))
+                        car.nextChangeDistance = randint(
+                            3, abs(padding.padDist))
             else:
                 for padding in vertical_paddings:
                     if check_point_on_ver_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
@@ -223,7 +240,8 @@ def render_existing_cars():
                         tt = random.choice(padding.directionList)
                         car.nextDirection = tt[0]
                         car.next_signal_no = tt[1]
-                        car.nextChangeDistance = randint(3, abs(padding.padDist))
+                        car.nextChangeDistance = randint(
+                            3, abs(padding.padDist))
         x = car.coorX
         y = car.coorY
         if car.toChange:
@@ -236,7 +254,7 @@ def render_existing_cars():
                 car.next_signal_no = 0
             else:
                 car.nextChangeDistance -= speed
-        if not signals[car.signal_no].isRed:
+        if not signals[car.signal_no[0]].isRed:
             if car.direction == 'R':
                 x += speed
             elif car.direction == 'L':
@@ -255,16 +273,16 @@ def render_existing_cars():
 
 valid_points_to_generate = [
     # points where cars can generate added padding
-    [(0, 174), (0, 210), "R", 1],
-    [(78, 2), (103, 2), "D", 2],
-    [(2, 412), (2, 435), "R", 15],
-    [(102, 625), (125, 625), "U", 18],
-    [(456, 41), (477, 41), "D", 4],
-    [(955, 41), (996, 41), "D", 6],
-    [(1231, 221), (1231, 256), "L", 5],
-    [(1234, 550), (1233, 573), "L", 8],
-    [(633, 625), (657, 628), "U", 13],
-    [(895, 630), (940, 630), "U", 18]
+    [(0, 171), (0, 210), "R", (1, -1)],
+    [(78, 2), (103, 2), "D", (2, -1)],
+    [(2, 412), (2, 435), "R", (15, -1)],
+    [(102, 625), (125, 625), "U", (18, -1)],
+    [(456, 41), (477, 41), "D", (4, -1)],
+    [(955, 41), (996, 41), "D", (6, 1)],
+    [(1231, 221), (1231, 256), "L", (5, 1)],
+    [(1234, 550), (1233, 573), "L", (8, -1)],
+    [(633, 625), (657, 628), "U", (13, -1)],
+    [(895, 630), (940, 630), "U", (18, -1)]
 ]
 
 
@@ -278,7 +296,8 @@ def rand_car():
     else:
         y = line[0][1]
         x = randint(min(line[0][0], line[1][0]), max(line[0][0], line[1][0]))
-    placed_cars.append(Car(coorX=x, coorY=y, direction=line[2], color=BLUE, signal_no=line[3]))
+    placed_cars.append(
+        Car(coorX=x, coorY=y, direction=line[2], color=BLUE, signal_no=line[3]))
 
 
 def draw_valid_points():
@@ -333,13 +352,16 @@ start_time = time()
 initialize_padding()
 initialize_signals()
 
+
 def flip_signal():
     for idx in range(1, len(signals)):
         signals[idx].isRed ^= True
 
+
 timer = 1
 
 while running:
+    # break
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -347,11 +369,10 @@ while running:
             break
     render_existing_cars()
     render_signals()
-    for padding in horizontal_paddings:
-        padding.draw_hori_padding()
+    for padding in vertical_paddings:
+        padding.draw_veri_padding()
     now_time = time()
     if(now_time - start_time > 1):
-        rand_car()
         rand_car()
         rand_car()
         rand_car()
