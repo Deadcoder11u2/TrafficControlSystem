@@ -19,7 +19,7 @@ pygame.init()
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
 
-maxCapBarrier = 10
+maxCapBarrier = 100
 
 
 class Signal:
@@ -43,6 +43,9 @@ class Signal:
         self.barrier[1][0] += h_del
         self.barrier[0][1] += v_del
         self.barrier[1][1] += v_del
+
+    # def __str__(self) -> str:
+    #     return str()
 
 
 class Car:
@@ -74,6 +77,8 @@ class Car:
 
         # number of signal after the direction is changed
         self.next_signal_no = -1
+
+        self.wait = False
 
 
 def draw_lines(lines):
@@ -162,26 +167,26 @@ signals = []
 
 def initialize_signals():
     coordinates = [
-        [(36, 192, (-10, 0)), ((30, 214), (30, 170))],
-        [(92, 154, (0, -10)), ((74, 160), (108, 160))],
-        [(395, 193, (-10, 0)), ((409, 216), (409, 169))],
-        [(467, 146, (0, -10)), ((451, 163), (480, 163))],
-        [(865, 193, (-10, 0)), ((889, 215), (889, 169)),
-         (1020, 230, (10, 0)), ((1009, 216), (1009, 264))],
-        [(977, 156, (0, 10)), ((894, 272), (947, 272)),
-         (924, 272, (0, -10)), ((949, 162), (999, 162))],
-        [(977, 480, (0, -10)), ((950, 500), (999, 500))],
-        [(1030, 568, (10, 0)), ((1008, 548), (1008, 577))],
-        [(715, 236, (10, 0)), ((699, 265), (699, 237))],
-        [(648, 280, (0, 10)), ((627, 272), (667, 272))],
-        [(332, 236, (0, 10)), ((314, 261), (213, 216))],
-        [(254, 288, (-10, 0)), ((237, 269), (271, 269))],
-        [(645, 500, (0, 10)), ((628, 480), (663, 480))],
-        [(608, 425, (-10, 0)), ((619, 410), (619, 438))],
-        [(209, 425, (-10, 0)), ((232, 408), (232, 438))],
-        [(293, 387, (0, -10)), ((273, 396), (306, 296))],
-        [(189, 457, (10, 0)), ((171, 440), (171, 471))],
-        [(115, 497, (0, 10)), ((97, 476), (132, 476))]
+        [[36, 192, [-10, 0]], [[30, 214], [30, 170]]],
+        [[92, 154, [0, -10]], [[74, 160], [108, 160]]],
+        [[395, 193, [-10, 0]], [[409, 216], [409, 169]]],
+        [[467, 146, [0, -10]], [[451, 163], [480, 163]]],
+        [[865, 193, [-10, 0]], [[889, 215], [889, 169]],
+         [1020, 230, [10, 0]], [[1009, 216], [1009, 264]]],
+        [[977, 156, [0, 10]], [[894, 272], [947, 272]],
+         [924, 272, [0, -10]], [[949, 162], [999, 162]]],
+        [[977, 480, [0, -10]], [[950, 500], [999, 500]]],
+        [[1030, 568, [10, 0]], [[1008, 548], [1008, 577]]],
+        [[715, 236, [10, 0]], [[699, 265], [699, 237]]],
+        [[648, 280, [0, 10]], [[627, 272], [667, 272]]],
+        [[332, 236, [0, 10]], [[314, 261], [213, 216]]],
+        [[254, 288, [-10, 0]], [[237, 269], [271, 269]]],
+        [[645, 500, [0, 10]], [[628, 480], [663, 480]]],
+        [[608, 425, [-10, 0]], [[619, 410], [619, 438]]],
+        [[209, 425, [-10, 0]], [[232, 408], [232, 438]]],
+        [[293, 387, [0, -10]], [[273, 396], [306, 296]]],
+        [[189, 457, [10, 0]], [[171, 440], [171, 471]]],
+        [[115, 497, [0, 10]], [[97, 476], [132, 476]]]
     ]
     cnt = 0
     signals.append(Signal(isRed=False, road_no=0, coors=(
@@ -189,12 +194,12 @@ def initialize_signals():
     for cnt in range(1, len(coordinates)+1):
         temp = coordinates[cnt-1]
         if cnt == 5:
-            signals.append(Signal(isRed=cnt % 2 == 0, road_no=5, coors=(
-                coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
+            signals.append(Signal(isRed=cnt % 2 == 0, road_no=5, coors=[
+                coordinates[cnt-1][0], coordinates[cnt-1][2]], barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
         if cnt == 6:
-            signals.append(Signal(isRed=cnt % 2 == 0, road_no=6, coors=(
-                coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
+            signals.append(Signal(isRed=cnt % 2 == 0, road_no=5, coors=[
+                coordinates[cnt-1][0], coordinates[cnt-1][2]], barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
         signals.append(Signal(isRed=cnt % 2 == 0, road_no=cnt, coors=(
             (temp[0]), (temp[0][0], temp[0][1], temp[0][2])), barrier=temp[1]))
@@ -202,8 +207,6 @@ def initialize_signals():
 
 def render_signals():
     for sig in signals:
-        if sig == "Srikanth":
-            continue
         for i in sig.coors:
             if sig.isRed:
                 pygame.draw.circle(screen, RED, (i[0], i[1]), 20, 30)
@@ -240,10 +243,10 @@ def render_existing_cars():
         if car.signal_no[0] == 6 or car.signal_no[0] == 5:
             pt1 = barrier[car.signal_no[1]][0]
             pt2 = barrier[car.signal_no[1]][1]
+            displacement = signals[car.signal_no[0]].coors[car.signal_no[1]][2]
         else:
             pt1 = barrier[0]
             pt2 = barrier[1]
-            print(signals[car.signal_no[0]].coors)
             displacement = signals[car.signal_no[0]].coors[0][2]
 
         crossing = True
@@ -252,10 +255,14 @@ def render_existing_cars():
                 crossing &= check_point_on_hor_line((pt1, pt2), (x, y))
             else:
                 crossing &= check_point_on_ver_line((pt1, pt2), (x, y))
-
         crossing &= signals[car.signal_no[0]].isRed
-
-        if not crossing:
+        if crossing:
+            car.wait = True
+        
+        if car.wait:
+            crossing = signals[car.signal_no[0]].isRed
+            car.wait = signals[car.signal_no[0]].isRed
+        if not (crossing or car.wait):
             if car.direction == 'U' or car.direction == 'D':
                 for padding in horizontal_paddings:
                     if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
@@ -285,7 +292,7 @@ def render_existing_cars():
             else:
                 car.nextChangeDistance -= speed
 
-        if not crossing:
+        if not (crossing or car.wait):
             if car.direction == 'R':
                 x += speed
             elif car.direction == 'L':
@@ -296,17 +303,33 @@ def render_existing_cars():
                 y -= speed
         else:
             signals[car.signal_no[0]].cap_of_barrier -= 1
-            # if signals[car.signal_no[0]].cap_of_barrier == 0:
-            #     signals[car.signal_no[0]].reset()
-            #     signals[car.signal_no[0]].extend_barrier(displacement[0], displacement[1])
-
+            if signals[car.signal_no[0]].cap_of_barrier <= 0:
+                signals[car.signal_no[0]].reset()
+                if signals[car.signal_no[0]].isRed:
+                    if car.signal_no[0] == 5 or car.signal_no[0] == 6:
+                        # barrier[car.signal_no[1]][0][0] += displacement[0]
+                        # barrier[car.signal_no[1]][1][0] += displacement[0]
+                        # barrier[car.signal_no[1]][0][1] += displacement[1]
+                        # barrier[car.signal_no[1]][1][1] += displacement[1]
+                        signals[car.signal_no[0]].barrier = barrier
+                    else:
+                        # barrier[0][0] += displacement[0]
+                        # barrier[1][0] += displacement[0]
+                        # barrier[0][1] += displacement[1]
+                        # barrier[1][1] += displacement[1]
+                        signals[car.signal_no[0]].barrier = barrier
+        hello = 0
+        try:
+            # if car.signal_no[0] == 1:
+            pygame.draw.line(screen, MAGENTA, tuple(barrier[0]), tuple(barrier[1]), 2)
+        except:
+            hello += 1
         car.coorX, car.coorY = x, y
         if x > 1245 or x < 0 or y > 636 or y < 0:
             continue
         new_placed.append(car)
         pygame.draw.circle(screen, car.color, (x, y), 5, 5)
     placed_cars = new_placed
-    # print()
 
 
 valid_points_to_generate = [
@@ -320,7 +343,7 @@ valid_points_to_generate = [
     [(1231, 221), (1231, 256), "L", (5, 1)],
     [(1234, 550), (1233, 573), "L", (8, -1)],
     [(633, 625), (657, 628), "U", (13, -1)],
-    [(895, 630), (940, 630), "U", (18, -1)]
+    [(895, 630), (940, 630), "U", (6, 0)]
 ]
 
 
@@ -393,6 +416,9 @@ initialize_signals()
 
 def flip_signal():
     for idx in range(1, len(signals)):
+        if signals[idx].isRed:
+            signals[idx].barrier = signals[idx].static_barrier
+            signals[idx].reset()
         signals[idx].isRed ^= True
 
 
