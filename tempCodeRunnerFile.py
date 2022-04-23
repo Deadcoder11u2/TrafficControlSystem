@@ -1,7 +1,2 @@
-
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
+ ()
+        # pt2 =

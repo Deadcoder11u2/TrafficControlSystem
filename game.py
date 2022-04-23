@@ -1,5 +1,5 @@
 from random import random
-from signal import signal
+from matplotlib.pyplot import bar
 import pygame
 from time import time
 from random import *
@@ -19,6 +19,8 @@ pygame.init()
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
 
+maxCapBarrier = 10
+
 
 class Signal:
     def __init__(self, isRed, road_no, coors, barrier):
@@ -29,9 +31,18 @@ class Signal:
         self.number_of_cars = 0
         self.barrier = barrier
         self.static_barrier = barrier
-        self.cap_of_barrier = 5
+        self.cap_of_barrier = maxCapBarrier
         self.hori_delta = 0
         self.veri_delta = 0
+
+    def reset(self):
+        self.cap_of_barrier = maxCapBarrier
+
+    def extend_barrier(self, h_del, v_del):
+        self.barrier[0][0] += h_del
+        self.barrier[1][0] += h_del
+        self.barrier[0][1] += v_del
+        self.barrier[1][1] += v_del
 
 
 class Car:
@@ -94,7 +105,7 @@ class Padding:
         pygame.draw.line(screen, CYAN, nfPoint, nsPoint)
 
 
-pygame.display.set_caption("Space Invaders")
+pygame.display.set_caption("Traffic Control System")
 
 placed_cars = []
 
@@ -157,8 +168,8 @@ def initialize_signals():
         [(467, 146, (0, -10)), ((451, 163), (480, 163))],
         [(865, 193, (-10, 0)), ((889, 215), (889, 169)),
          (1020, 230, (10, 0)), ((1009, 216), (1009, 264))],
-        [(924, 272, (0, -10)), ((949, 162), (999, 162)),
-         (977, 156, (0, 10)), ((894, 272), (947, 272))],
+        [(977, 156, (0, 10)), ((894, 272), (947, 272)),
+         (924, 272, (0, -10)), ((949, 162), (999, 162))],
         [(977, 480, (0, -10)), ((950, 500), (999, 500))],
         [(1030, 568, (10, 0)), ((1008, 548), (1008, 577))],
         [(715, 236, (10, 0)), ((699, 265), (699, 237))],
@@ -174,20 +185,18 @@ def initialize_signals():
     ]
     cnt = 0
     signals.append(Signal(isRed=False, road_no=0, coors=(
-        (-5, -5), (-5, -5)), barrier=(-10, -10)))
+        (-5, -5, (0, 0)), (-5, -5), (0, 0)), barrier=(-10, -10)))
     for cnt in range(1, len(coordinates)+1):
         temp = coordinates[cnt-1]
         if cnt == 5:
-            signals.append(Signal(isRed=True, road_no=5, coors=(
+            signals.append(Signal(isRed=cnt % 2 == 0, road_no=5, coors=(
                 coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
         if cnt == 6:
-            signals.append(Signal(isRed=not True, road_no=6, coors=(
+            signals.append(Signal(isRed=cnt % 2 == 0, road_no=6, coors=(
                 coordinates[cnt-1][0], coordinates[cnt-1][2]), barrier=(coordinates[cnt-1][1], coordinates[cnt-1][3])))
             continue
-        # signals.append(Signal(isRed=not True, road_no=cnt, coors=(
-        #     coordinates[cnt-1][0][0], coordinates[cnt-1][0][1]), barrier=coordinates[cnt-1][1]))
-        signals.append(Signal(isRed=not True, road_no=cnt, coors=(
+        signals.append(Signal(isRed=cnt % 2 == 0, road_no=cnt, coors=(
             (temp[0]), (temp[0][0], temp[0][1], temp[0][2])), barrier=temp[1]))
 
 
@@ -195,7 +204,6 @@ def render_signals():
     for sig in signals:
         if sig == "Srikanth":
             continue
-        # print(sig.coors)
         for i in sig.coors:
             if sig.isRed:
                 pygame.draw.circle(screen, RED, (i[0], i[1]), 20, 30)
@@ -223,7 +231,31 @@ def render_existing_cars():
     global placed_cars
     new_placed = []
     for car in placed_cars:
-        if not signals[car.signal_no[0]].isRed:
+        barrier = signals[car.signal_no[0]].barrier
+        x = car.coorX
+        y = car.coorY
+        pt1 = ()
+        pt2 = ()
+        displacement = ()
+        if car.signal_no[0] == 6 or car.signal_no[0] == 5:
+            pt1 = barrier[car.signal_no[1]][0]
+            pt2 = barrier[car.signal_no[1]][1]
+        else:
+            pt1 = barrier[0]
+            pt2 = barrier[1]
+            print(signals[car.signal_no[0]].coors)
+            displacement = signals[car.signal_no[0]].coors[0][2]
+
+        crossing = True
+        if signals[car.signal_no[0]].isRed:
+            if car.direction == 'D' or car.direction == 'U':
+                crossing &= check_point_on_hor_line((pt1, pt2), (x, y))
+            else:
+                crossing &= check_point_on_ver_line((pt1, pt2), (x, y))
+
+        crossing &= signals[car.signal_no[0]].isRed
+
+        if not crossing:
             if car.direction == 'U' or car.direction == 'D':
                 for padding in horizontal_paddings:
                     if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
@@ -242,8 +274,6 @@ def render_existing_cars():
                         car.next_signal_no = tt[1]
                         car.nextChangeDistance = randint(
                             3, abs(padding.padDist))
-        x = car.coorX
-        y = car.coorY
         if car.toChange:
             if car.nextChangeDistance == 0:
                 car.direction = car.nextDirection
@@ -254,7 +284,8 @@ def render_existing_cars():
                 car.next_signal_no = 0
             else:
                 car.nextChangeDistance -= speed
-        if not signals[car.signal_no[0]].isRed:
+
+        if not crossing:
             if car.direction == 'R':
                 x += speed
             elif car.direction == 'L':
@@ -263,12 +294,19 @@ def render_existing_cars():
                 y += speed
             else:
                 y -= speed
+        else:
+            signals[car.signal_no[0]].cap_of_barrier -= 1
+            # if signals[car.signal_no[0]].cap_of_barrier == 0:
+            #     signals[car.signal_no[0]].reset()
+            #     signals[car.signal_no[0]].extend_barrier(displacement[0], displacement[1])
+
         car.coorX, car.coorY = x, y
         if x > 1245 or x < 0 or y > 636 or y < 0:
             continue
         new_placed.append(car)
         pygame.draw.circle(screen, car.color, (x, y), 5, 5)
     placed_cars = new_placed
+    # print()
 
 
 valid_points_to_generate = [
@@ -361,7 +399,6 @@ def flip_signal():
 timer = 1
 
 while running:
-    # break
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -383,5 +420,5 @@ while running:
         start_time = now_time
     if timer % 10 == 0:
         flip_signal()
-        timer = 1
+        timer += 1
     pygame.display.update()
