@@ -1,4 +1,4 @@
-from random import Random, random
+from random import random
 import pygame
 from time import time
 from random import *
@@ -12,14 +12,23 @@ MAGENTA = (255, 0, 255)
 SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
 
+# Initialize the game
+pygame.init()
+
+# Creating the screen
+screen = pygame.display.set_mode((1245, 636))
 class Signal:
-    def __init__(self, isRed, road_no):
+    def __init__(self, isRed, road_no, coors):
+        # self.coorX = coorX
+        # self.coorY = coorY
+        self.coors = coors
         self.isRed = isRed
         self.road_no = road_no
-        self.nextStopDistance = 4
+        # self.nextStopDistance = 4
+
 
 class Car:
-    def __init__(self, coorX, coorY, direction):
+    def __init__(self, coorX, coorY, direction, color):
         # Current coordinates of the car
         self.coorX = coorX
         self.coorY = coorY
@@ -39,18 +48,16 @@ class Car:
         # if it has crossed the padding region then after what distance the direction should change
         self.nextChangeDistance = 0
 
+        # the color of the car
+        self.color = color
+
+        # in which signal the car is standing
+        self.signal_no = 1
+
 
 def draw_lines(lines):
     for line in lines:
         pygame.draw.line(screen, (0, 0, 0), line[0], line[1], 2)
-
-
-# Initialize the game
-pygame.init()
-
-# Creating the screen
-screen = pygame.display.set_mode((1245, 636))
-
 
 class Padding:
     def __init__(self, fPoint, sPoint, padDist, directionList):
@@ -59,7 +66,7 @@ class Padding:
         self.padDist = padDist
         self.directionList = directionList
         # self.road_no = self.road_no
-        
+
     def __str__(self) -> str:
         return str(self.fPoint) + str(self.sPoint) + str(self.padDist) + str(self.directionList)
 
@@ -75,10 +82,11 @@ pygame.display.set_caption("Space Invaders")
 placed_cars = []
 
 # what should be the speed of the cars
-speed = 1
+speed = 0.5
 
 horizontal_paddings = []
 vertical_paddings = []
+
 
 def initialize_padding():
     global horizontal_paddings, vertical_paddings
@@ -114,9 +122,49 @@ def initialize_padding():
         [(162, 471), (162, 440), ("D", "L"), -20]
     ]
     for line in hori_padding:
-        horizontal_paddings.append(Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
+        horizontal_paddings.append(
+            Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
     for line in veri_paddings:
-        vertical_paddings.append(Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
+        vertical_paddings.append(
+            Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
+
+signals = []
+
+def initialize_signals():
+    coordinates = [
+        [(36, 192)],
+        [(92, 154)],
+        [(395, 193)],
+        [(467, 146)],
+        [(865, 193), (1020, 230)],
+        [(977, 156), (924, 272)],
+        [(977, 480)],
+        [(1030, 568)],
+        [(715, 236)],
+        [(648, 280)],
+        [(332, 236)],
+        [(254, 288)],
+        [(645, 500)],
+        [(608, 425)],
+        [(209, 425)],
+        [(293, 387)],
+        [(189, 457)],
+        [(115, 497)]
+    ]
+    cnt = 0
+    for point in coordinates:
+        signals.append(Signal(isRed=cnt%2==1, road_no=cnt, coors=point))
+        cnt += 1
+
+def render_signals():
+    # print("Hello");
+    for sig in signals:
+        for i in sig.coors:
+            # print(i)
+            if sig.isRed:
+                pygame.draw.circle(screen, RED, i, 10, 10)
+            else:
+                pygame.draw.circle(screen, GREEN, i, 10, 10)
 
 def check_point_on_hor_line(line, point):
     x1 = min(line[0][0], line[1][0])
@@ -125,12 +173,15 @@ def check_point_on_hor_line(line, point):
         return True
     return False
 
+
 def check_point_on_ver_line(line, point):
-    y1 = min(line[0][1], line[1][1]);
+    y1 = min(line[0][1], line[1][1])
     y2 = max(line[0][1], line[1][1])
     if point[1] >= y1 and point[1] <= y2 and point[0] == line[0][0]:
         return True
     return False
+
+
 
 def render_existing_cars():
     global placed_cars
@@ -152,7 +203,7 @@ def render_existing_cars():
         y = car.coorY
         if car.toChange:
             if car.nextChangeDistance == 0:
-                car.direction =  car.nextDirection
+                car.direction = car.nextDirection
                 car.nextDirection = "?"
                 car.nextChangeDistance = 0
                 car.toChange = False
@@ -170,7 +221,7 @@ def render_existing_cars():
         if x > 1245 or x < 0 or y > 636 or y < 0:
             continue
         new_placed.append(car)
-        pygame.draw.circle(screen, BLUE, (x, y), 5, 5)
+        pygame.draw.circle(screen, car.color, (x, y), 5, 5)
     placed_cars = new_placed
 
 
@@ -199,7 +250,7 @@ def rand_car():
     else:
         y = line[0][1]
         x = randint(min(line[0][0], line[1][0]), max(line[0][0], line[1][0]))
-    placed_cars.append(Car(coorX=x, coorY=y, direction=line[2]))
+    placed_cars.append(Car(coorX=x, coorY=y, direction=line[2], color=BLUE))
 
 
 def draw_valid_points():
@@ -252,8 +303,7 @@ car = pygame.image.load(r'car_1.png')
 start_time = time()
 
 initialize_padding()
-
-    
+initialize_signals()
 while running:
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
@@ -261,14 +311,15 @@ while running:
             running = False
             break
     render_existing_cars()
+    render_signals()
     now_time = time()
     if(now_time - start_time > 0.5):
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
-        rand_car()
+        # rand_car()
+        # rand_car()
+        # rand_car()
+        # rand_car()
+        # rand_car()
+        # rand_car()
+        # rand_car()
         start_time = now_time
     pygame.display.update()
