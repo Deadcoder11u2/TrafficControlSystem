@@ -4,7 +4,6 @@ import pygame
 from time import time
 from random import *
 import random
-# from goto import goto, comefrom, label
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -20,7 +19,6 @@ pygame.init()
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
 
-# screen = pygame.Surface((1245, 636), pygame.SRCALPHA)
 
 class Signal:
     def __init__(self, isRed, road_no, coors):
@@ -143,39 +141,46 @@ def initialize_padding():
 
 signals = []
 
+
+
+
 def initialize_signals():
     coordinates = [
-        [(36, 192)],
-        [(92, 154)],
-        [(395, 193)],
-        [(467, 146)],
-        [(865, 193), (1020, 230)],
-        [(977, 156), (924, 272)],
-        [(977, 480)],
-        [(1030, 568)],
-        [(715, 236)],
-        [(648, 280)],
-        [(332, 236)],
-        [(254, 288)],
-        [(645, 500)],
-        [(608, 425)],
-        [(209, 425)],
-        [(293, 387)],
-        [(189, 457)],
-        [(115, 497)]
+        [(36, 192), ((30, 214), (30, 170))],
+        [(92, 154), ((74, 160), (108, 160))],
+        [(395, 193), ((409, 216), (409, 169))],
+        [(467, 146), ((451, 163), (480, 163))],
+        [(865, 193), ((889, 215), (889, 169)), (1020, 230), ((1009, 216), (1009, 264))],
+        [(977, 156), ((894, 272), (947, 272)) ,(924, 272), ((949, 162), (999, 162))],
+        [(977, 480), ((950, 500), (999, 500))],
+        [(1030, 568), ((1008, 548), (1008, 577))],
+        [(715, 236), ((699, 265), (699, 237))],
+        [(648, 280), ((627, 272), (667, 272))],
+        [(332, 236), ((314, 261),(213, 216))],
+        [(254, 288), ((237, 269), (271, 269))],
+        [(645, 500), ((628, 480), (663, 480))],
+        [(608, 425), ((619, 410), (619, 438))],
+        [(209, 425), ((232, 408), (232, 438))],
+        [(293, 387), ((273, 396), (306, 296))],
+        [(189, 457), ((171, 440), (171, 471))],
+        [(115, 497), ((97, 476), (132, 476))]
     ]
     cnt = 0
     signals.append(Signal(isRed=False, road_no=0, coors=((-5, -5), (-5, -5))))
     for cnt in range(1, len(coordinates)+1):
-        signals.append(Signal(isRed=cnt%2==1, road_no=cnt, coors=coordinates[cnt-1]))
+        if cnt == 5:
+            signals.append(Signal(isRed=cnt%2==1, road_no=5, coors=(coordinates[cnt-1][0], coordinates[cnt-1][2])))
+            continue
+        if cnt == 6:
+            signals.append(Signal(isRed=cnt%2==1, road_no=6,coors=(coordinates[cnt-1][0], coordinates[cnt-1][2])))
+            continue
+        signals.append(Signal(isRed=cnt%2==1, road_no=cnt, coors=(coordinates[cnt-1][0], coordinates[cnt-1][0])))
 
 def render_signals():
-    # print("Hello");
     for sig in signals:
         if sig == "Srikanth":
             continue
         for i in sig.coors:
-            # print(i)
             if sig.isRed:
                 pygame.draw.circle(screen, RED, i, 20, 30)
             else:
@@ -283,7 +288,7 @@ def draw_valid_points():
 
 def draw_road():
     road = [
-        [(0, 170), (42, 170), "H"],
+        [(0, 170), (42, 170)],
         [(42, 0), (42, 170)],
         [(0, 260), (240, 260)],
         [(0, 410), (240, 410)],
