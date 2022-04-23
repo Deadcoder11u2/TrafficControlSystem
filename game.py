@@ -19,6 +19,9 @@ pygame.init()
 
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
+
+# screen = pygame.Surface((1245, 636), pygame.SRCALPHA)
+
 class Signal:
     def __init__(self, isRed, road_no, coors):
         self.coors = coors
@@ -26,6 +29,7 @@ class Signal:
         self.road_no = road_no
         self.wait_time = 0
         self.number_of_cars = 0
+        self.barrier = (1, 1)
 
 
 class Car:
@@ -173,9 +177,9 @@ def render_signals():
         for i in sig.coors:
             # print(i)
             if sig.isRed:
-                pygame.draw.circle(screen, RED, i, 20, 10)
+                pygame.draw.circle(screen, RED, i, 20, 30)
             else:
-                pygame.draw.circle(screen, GREEN, i, 20, 10)
+                pygame.draw.circle(screen, GREEN, i, 20, 30)
 
 def check_point_on_hor_line(line, point):
     x1 = min(line[0][0], line[1][0])
@@ -198,7 +202,6 @@ def render_existing_cars():
     global placed_cars
     new_placed = []
     for car in placed_cars:
-        # if not car.signal_no ==0:
         if not signals[car.signal_no].isRed:
             if car.direction == 'U' or car.direction == 'D':
                 for padding in horizontal_paddings:
@@ -228,7 +231,6 @@ def render_existing_cars():
                 car.next_signal_no = 0
             else:
                 car.nextChangeDistance -= speed
-        # if not car.signal_no == 0:
         if not signals[car.signal_no].isRed:
             if car.direction == 'R':
                 x += speed
