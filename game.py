@@ -1,8 +1,10 @@
 from random import random
+from signal import signal
 import pygame
 from time import time
 from random import *
 import random
+# from goto import goto, comefrom, label
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -19,12 +21,11 @@ pygame.init()
 screen = pygame.display.set_mode((1245, 636))
 class Signal:
     def __init__(self, isRed, road_no, coors):
-        # self.coorX = coorX
-        # self.coorY = coorY
         self.coors = coors
         self.isRed = isRed
         self.road_no = road_no
-        # self.nextStopDistance = 4
+        self.wait_time = 0
+        self.number_of_cars = 0
 
 
 class Car:
@@ -160,7 +161,7 @@ def initialize_signals():
         [(115, 497)]
     ]
     cnt = 0
-    signals.append("Srikanth")
+    signals.append(Signal(isRed=False, road_no=0, coors=((-5, -5), (-5, -5))))
     for cnt in range(1, len(coordinates)+1):
         signals.append(Signal(isRed=cnt%2==1, road_no=cnt, coors=coordinates[cnt-1]))
 
@@ -197,40 +198,46 @@ def render_existing_cars():
     global placed_cars
     new_placed = []
     for car in placed_cars:
-        if car.direction == 'U' or car.direction == 'D':
-            for padding in horizontal_paddings:
-                if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
-                    car.toChange = True
-                    tt = random.choice(padding.directionList)
-                    car.nextDirection = tt[0]
-                    car.next_signal_no = tt[1]
-                    car.nextChangeDistance = randint(3, abs(padding.padDist))
-        else:
-            for padding in vertical_paddings:
-                if check_point_on_ver_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
-                    car.toChange = True
-                    tt = random.choice(padding.directionList)
-                    car.nextDirection = tt[0]
-                    car.next_signal_no = tt[1]
-                    car.nextChangeDistance = randint(3, abs(padding.padDist))
+        # if not car.signal_no ==0:
+        if not signals[car.signal_no].isRed:
+            if car.direction == 'U' or car.direction == 'D':
+                for padding in horizontal_paddings:
+                    if check_point_on_hor_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
+                        car.toChange = True
+                        tt = random.choice(padding.directionList)
+                        car.nextDirection = tt[0]
+                        car.next_signal_no = tt[1]
+                        car.nextChangeDistance = randint(3, abs(padding.padDist))
+            else:
+                for padding in vertical_paddings:
+                    if check_point_on_ver_line((padding.fPoint, padding.sPoint), (car.coorX, car.coorY)):
+                        car.toChange = True
+                        tt = random.choice(padding.directionList)
+                        car.nextDirection = tt[0]
+                        car.next_signal_no = tt[1]
+                        car.nextChangeDistance = randint(3, abs(padding.padDist))
         x = car.coorX
         y = car.coorY
         if car.toChange:
             if car.nextChangeDistance == 0:
                 car.direction = car.nextDirection
+                car.signal_no = car.next_signal_no
                 car.nextDirection = "?"
                 car.nextChangeDistance = 0
                 car.toChange = False
+                car.next_signal_no = 0
             else:
                 car.nextChangeDistance -= speed
-        if car.direction == 'R':
-            x += speed
-        elif car.direction == 'L':
-            x -= speed
-        elif car.direction == 'D':
-            y += speed
-        else:
-            y -= speed
+        # if not car.signal_no == 0:
+        if not signals[car.signal_no].isRed:
+            if car.direction == 'R':
+                x += speed
+            elif car.direction == 'L':
+                x -= speed
+            elif car.direction == 'D':
+                y += speed
+            else:
+                y -= speed
         car.coorX, car.coorY = x, y
         if x > 1245 or x < 0 or y > 636 or y < 0:
             continue
@@ -318,6 +325,13 @@ start_time = time()
 
 initialize_padding()
 initialize_signals()
+
+def flip_signal():
+    for idx in range(1, len(signals)):
+        signals[idx].isRed ^= True
+
+timer = 1
+
 while running:
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
@@ -337,5 +351,9 @@ while running:
         rand_car()
         rand_car()
         rand_car()
+        timer += 1
         start_time = now_time
+    if timer % 10 == 0:
+        flip_signal()
+        timer = 1
     pygame.display.update()
