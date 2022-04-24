@@ -167,26 +167,26 @@ signals = []
 
 def initialize_signals():
     coordinates = [
-        [[36, 192, [-10, 0]], [[30, 214], [30, 170]]],
-        [[92, 154, [0, -10]], [[74, 160], [108, 160]]],
+        [[36, 192, [-10, 0]],  [[30, 214], [30, 170]]],
+        [[92, 154, [0, -10]],  [[74, 160], [108, 160]]],
         [[395, 191, [-10, 0]], [[409, 216], [409, 169]]],
         [[467, 146, [0, -10]], [[451, 163], [480, 163]]],
         [[865, 191, [-10, 0]], [[889, 215], [889, 169]],
          [1020, 240, [10, 0]], [[1009, 216], [1009, 264]]],
-        [[975, 156, [0, 10]], [[894, 272], [947, 272]],
+        [[975, 156, [0, 10]],  [[894, 272], [947, 272]],
          [920, 272, [0, -10]], [[949, 162], [999, 162]]],
         [[975, 480, [0, -10]], [[950, 500], [999, 500]]],
         [[1030, 560, [10, 0]], [[1008, 548], [1008, 577]]],
-        [[715, 241, [10, 0]], [[699, 265], [699, 237]]],
-        [[648, 280, [0, 10]], [[627, 272], [667, 272]]],
-        [[332, 241, [0, 10]], [[314, 261], [213, 216]]],
-        [[254, 288, [-10, 0]], [[237, 269], [271, 269]]],
-        [[645, 500, [0, 10]], [[628, 480], [663, 480]]],
+        [[715, 241, [10, 0]],  [[699, 265], [699, 215]]],
+        [[648, 280, [0, 10]],  [[627, 272], [667, 272]]],
+        [[332, 241, [10, 0]],  [[314, 261], [314, 216]]],
+        [[254, 288, [0, 10]], [[237, 269], [271, 269]]],
+        [[645, 500, [0, 10]],  [[628, 480], [663, 480]]],
         [[608, 425, [-10, 0]], [[619, 410], [619, 438]]],
         [[209, 425, [-10, 0]], [[232, 408], [232, 438]]],
-        [[290, 387, [0, -10]], [[273, 396], [306, 296]]],
-        [[189, 457, [10, 0]], [[171, 440], [171, 471]]],
-        [[115, 497, [0, 10]], [[97, 476], [132, 476]]]
+        [[290, 387, [0, -10]], [[272, 396], [308, 396]]],
+        [[189, 457, [10, 0]],  [[171, 440], [171, 471]]],
+        [[115, 497, [0, 10]],  [[97, 476], [132, 476]]]
     ]
     cnt = 0
     signals.append(Signal(isRed=False, road_no=0, coors=(
@@ -258,7 +258,7 @@ def render_existing_cars():
         crossing &= signals[car.signal_no[0]].isRed
         if crossing:
             car.wait = True
-        
+
         if car.wait:
             crossing = signals[car.signal_no[0]].isRed
             car.wait = signals[car.signal_no[0]].isRed
@@ -313,7 +313,8 @@ def render_existing_cars():
                     signals[car.signal_no[0]].barrier = barrier
         hello = 0
         try:
-            pygame.draw.line(screen, MAGENTA, tuple(barrier[0]), tuple(barrier[1]), 2)
+            pygame.draw.line(screen, MAGENTA, tuple(
+                barrier[0]), tuple(barrier[1]), 2)
         except:
             hello = 1
         car.coorX, car.coorY = x, y
@@ -394,12 +395,56 @@ def draw_road():
         [(160, 470), (630, 470)],
         [(630, 470), (630, 630)]
     ]
+
+
+    road = [
+        [[30, 214], [30, 170]],
+        [[74, 160], [108, 160]],
+        [[409, 216], [409, 169]],
+        [[451, 163], [480, 163]],
+        [[889, 215], [889, 169]],
+        [[1009, 216], [1009, 264]],
+        [[894, 272], [947, 272]],
+        [[949, 162], [999, 162]],
+        [[950, 500], [999, 500]],
+        [[1008, 548], [1008, 577]],
+        [[699, 265], [699, 237]],
+        [[627, 272], [667, 272]],
+        [[314, 261], [314, 216]],
+        [[237, 269], [271, 269]],
+        [[628, 480], [663, 480]],
+        [[619, 410], [619, 438]],
+        [[232, 408], [232, 438]],
+        [[272, 396], [307, 396]],
+        [[171, 440], [171, 471]],
+        [[97, 476], [132, 476]],
+    ]
     for line in road:
         pygame.draw.line(screen, LIME, line[0], line[1])
 
 
+def extend_barrier():
+    for sig in signals:
+        if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
+            continue
+        sig.barrier[0][0] += sig.coors[0][2][0]
+        sig.barrier[1][0] += sig.coors[0][2][0]
+        sig.barrier[0][1] += sig.coors[0][2][1]
+        sig.barrier[1][1] += sig.coors[0][2][1]
+
+
+def reset_barrier():
+    for sig in signals:
+        if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
+            continue
+        sig.barrier[0][0] -= 9*sig.coors[0][2][0]
+        sig.barrier[1][0] -= 9*sig.coors[0][2][0]
+        sig.barrier[0][1] -= 9*sig.coors[0][2][1]
+        sig.barrier[1][1] -= 9*sig.coors[0][2][1]
+
+
 running = True
-image = pygame.image.load(r'mywork/road.png')
+image = pygame.image.load(r'mywork/road1.png')
 car = pygame.image.load(r'car_1.png')
 start_time = time()
 
@@ -415,13 +460,15 @@ def flip_signal():
             wait_array[idx] = 0
         signals[idx].isRed ^= True
 
+
 wait_array = 20*[0]
+
 
 def increment_wait_time():
     global wait_array
     for sig in signals:
-        # if sig.isRed:
         wait_array[sig.road_no] += sig.number_of_cars
+
 
 timer = 1
 
@@ -431,8 +478,6 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             break
-    render_existing_cars()
-    render_signals()
     now_time = time()
     if(now_time - start_time > 1):
         rand_car()
@@ -443,9 +488,13 @@ while running:
         rand_car()
         timer += 1
         increment_wait_time()
+        extend_barrier()
         start_time = now_time
-        # print(wait_array)
+    render_existing_cars()
+    render_signals()
+    draw_road()
     if timer % 10 == 0:
-        flip_signal()
         timer += 1
+        flip_signal()
+        reset_barrier()
     pygame.display.update()
