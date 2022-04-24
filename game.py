@@ -260,7 +260,6 @@ def render_existing_cars():
         crossing &= signals[car.signal_no[0]].isRed
         if crossing:
             car.wait = True
-            car.color = RED
             signals[car.signal_no[0]].queue.append(signals[car.signal_no[0]].counter)
 
         if car.wait:
@@ -320,7 +319,7 @@ def render_existing_cars():
             pygame.draw.line(screen, MAGENTA, tuple(
                 barrier[0]), tuple(barrier[1]), 2)
             # hello = 10
-        except:
+        except:   
             hello = 1
         car.coorX, car.coorY = x, y
         if x > 1245 or x < 0 or y > 636 or y < 0:
@@ -430,13 +429,16 @@ def draw_road():
 def extend_barrier():
     for sig in signals:
         if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
-            # sig_n = sig.road_no
-            # print(sig.barrier[0])
-            # if sig.road_no != 0:
-            #     sig.barrier[0][0][0] += sig.coors[0][0][2][0]
-            #     sig.barrier[0][1][0] += sig.coors[0][0][2][0]
-            #     sig.barrier[0][0][1] += sig.coors[0][0][2][1]
-            #     sig.barrier[0][1][1] += sig.coors[0][0][2][1]
+            if sig.road_no != 0:
+                sig.barrier[0][0][0] += sig.coors[0][2][0]
+                sig.barrier[0][1][0] += sig.coors[0][2][0]
+                sig.barrier[0][0][1] += sig.coors[0][2][1]
+                sig.barrier[0][1][1] += sig.coors[0][2][1]
+                sig.barrier[1][0][0] += sig.coors[1][2][0]
+                sig.barrier[1][1][0] += sig.coors[1][2][0]
+                sig.barrier[1][0][1] += sig.coors[1][2][1]
+                sig.barrier[1][1][1] += sig.coors[1][2][1]
+                sig.counter += 1
             continue
         sig.barrier[0][0] += sig.coors[0][2][0]
         sig.barrier[1][0] += sig.coors[0][2][0]
@@ -448,6 +450,16 @@ def extend_barrier():
 def reset_barrier():
     for sig in signals:
         if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
+            if sig.road_no != 0:
+                sig.barrier[0][0][0] -= sig.counter*sig.coors[0][2][0]
+                sig.barrier[0][1][0] -= sig.counter*sig.coors[0][2][0]
+                sig.barrier[0][0][1] -= sig.counter*sig.coors[0][2][1]
+                sig.barrier[0][1][1] -= sig.counter*sig.coors[0][2][1]
+                sig.barrier[1][0][0] -= sig.counter*sig.coors[1][2][0]
+                sig.barrier[1][1][0] -= sig.counter*sig.coors[1][2][0]
+                sig.barrier[1][0][1] -= sig.counter*sig.coors[1][2][1]
+                sig.barrier[1][1][1] -= sig.counter*sig.coors[1][2][1]
+                sig.counter = 0
             continue
         sig.barrier[0][0] -= sig.counter*sig.coors[0][2][0]
         sig.barrier[1][0] -= sig.counter*sig.coors[0][2][0]
@@ -476,9 +488,11 @@ initialize_signals()
 wait_array = 20*[0]
 def flip_caller():
     isRed = flip_signal(wait_array=wait_array)
+    print(isRed)
     for i in range(1, 19):
         signals[i].isRed = isRed[i]
         signals[i].queue = []
+        signals[i].number_of_cars = 0
 
 
 def increment_wait_time():
@@ -497,6 +511,11 @@ while running:
             break
     now_time = time()
     if(now_time - start_time > 1):
+        rand_car()
+        rand_car()
+        rand_car()
+        rand_car()
+        rand_car()
         rand_car()
         rand_car()
         rand_car()
