@@ -1,9 +1,9 @@
 from random import random
-from matplotlib.pyplot import bar
 import pygame
 from time import time
 from random import *
 import random
+from main import flip_signal
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -34,6 +34,8 @@ class Signal:
         self.cap_of_barrier = maxCapBarrier
         self.hori_delta = 0
         self.veri_delta = 0
+        self.counter = 0
+        self.queue = []
 
     def reset(self):
         self.cap_of_barrier = maxCapBarrier
@@ -92,7 +94,6 @@ class Padding:
         self.sPoint = sPoint
         self.padDist = padDist
         self.directionList = directionList
-        # self.road_no = self.road_no
 
     def __str__(self) -> str:
         return str(self.fPoint) + str(self.sPoint) + str(self.padDist) + str(self.directionList)
@@ -164,29 +165,30 @@ def initialize_padding():
 
 signals = []
 
+BARRIER_SPEED = 1
 
 def initialize_signals():
     coordinates = [
-        [[36, 192, [-10, 0]],  [[30, 214], [30, 170]]],
-        [[92, 154, [0, -10]],  [[74, 160], [108, 160]]],
-        [[395, 191, [-10, 0]], [[409, 216], [409, 169]]],
-        [[467, 146, [0, -10]], [[451, 163], [480, 163]]],
-        [[865, 191, [-10, 0]], [[889, 215], [889, 169]],
-         [1020, 240, [10, 0]], [[1009, 216], [1009, 264]]],
-        [[975, 156, [0, 10]],  [[894, 272], [947, 272]],
-         [920, 272, [0, -10]], [[949, 162], [999, 162]]],
-        [[975, 480, [0, -10]], [[950, 500], [999, 500]]],
-        [[1030, 560, [10, 0]], [[1008, 548], [1008, 577]]],
-        [[715, 241, [10, 0]],  [[699, 265], [699, 215]]],
-        [[648, 280, [0, 10]],  [[627, 272], [667, 272]]],
-        [[332, 241, [10, 0]],  [[314, 261], [314, 216]]],
-        [[254, 288, [0, 10]], [[237, 269], [271, 269]]],
-        [[645, 500, [0, 10]],  [[628, 480], [663, 480]]],
-        [[608, 425, [-10, 0]], [[619, 410], [619, 438]]],
-        [[209, 425, [-10, 0]], [[232, 408], [232, 438]]],
-        [[290, 387, [0, -10]], [[272, 396], [308, 396]]],
-        [[189, 457, [10, 0]],  [[171, 440], [171, 471]]],
-        [[115, 497, [0, 10]],  [[97, 476], [132, 476]]]
+        [[36, 192, [-BARRIER_SPEED, 0]],  [[30, 214], [30, 170]]],
+        [[92, 154, [0, -BARRIER_SPEED]],  [[74, 160], [108, 160]]],
+        [[395, 191, [-BARRIER_SPEED, 0]], [[409, 216], [409, 169]]],
+        [[467, 146, [0, -BARRIER_SPEED]], [[451, 163], [480, 163]]],
+        [[865, 191, [-BARRIER_SPEED, 0]], [[889, 215], [889, 169]],
+         [1020, 240, [BARRIER_SPEED, 0]], [[1009, 216], [1009, 264]]],
+        [[975, 156, [0, BARRIER_SPEED]],  [[894, 272], [947, 272]],
+         [920, 272, [0, -BARRIER_SPEED]], [[949, 162], [999, 162]]],
+        [[975, 480, [0, -BARRIER_SPEED]], [[950, 500], [999, 500]]],
+        [[1030, 560, [BARRIER_SPEED, 0]], [[1008, 548], [1008, 577]]],
+        [[715, 241, [BARRIER_SPEED, 0]],  [[699, 265], [699, 215]]],
+        [[648, 280, [0, BARRIER_SPEED]],  [[627, 272], [667, 272]]],
+        [[332, 241, [BARRIER_SPEED, 0]],  [[314, 261], [314, 216]]],
+        [[254, 288, [0, BARRIER_SPEED]], [[237, 269], [271, 269]]],
+        [[645, 500, [0, BARRIER_SPEED]],  [[628, 480], [663, 480]]],
+        [[608, 425, [-BARRIER_SPEED, 0]], [[619, 410], [619, 438]]],
+        [[209, 425, [-BARRIER_SPEED, 0]], [[232, 408], [232, 438]]],
+        [[290, 387, [0, -BARRIER_SPEED]], [[272, 396], [308, 396]]],
+        [[189, 457, [BARRIER_SPEED, 0]],  [[171, 440], [171, 471]]],
+        [[115, 497, [0, BARRIER_SPEED]],  [[97, 476], [132, 476]]]
     ]
     cnt = 0
     signals.append(Signal(isRed=False, road_no=0, coors=(
@@ -198,7 +200,7 @@ def initialize_signals():
                 coordinates[cnt-1][0], coordinates[cnt-1][2]], barrier=list([coordinates[cnt-1][1], coordinates[cnt-1][3]])))
             continue
         if cnt == 6:
-            signals.append(Signal(isRed=cnt % 2 == 0, road_no=5, coors=[
+            signals.append(Signal(isRed=cnt % 2 == 0, road_no=6, coors=[
                 coordinates[cnt-1][0], coordinates[cnt-1][2]], barrier=list([coordinates[cnt-1][1], coordinates[cnt-1][3]])))
             continue
         signals.append(Signal(isRed=cnt % 2 == 0, road_no=cnt, coors=(
@@ -258,6 +260,8 @@ def render_existing_cars():
         crossing &= signals[car.signal_no[0]].isRed
         if crossing:
             car.wait = True
+            car.color = RED
+            signals[car.signal_no[0]].queue.append(signals[car.signal_no[0]].counter)
 
         if car.wait:
             crossing = signals[car.signal_no[0]].isRed
@@ -315,6 +319,7 @@ def render_existing_cars():
         try:
             pygame.draw.line(screen, MAGENTA, tuple(
                 barrier[0]), tuple(barrier[1]), 2)
+            # hello = 10
         except:
             hello = 1
         car.coorX, car.coorY = x, y
@@ -353,7 +358,6 @@ def rand_car():
     placed_cars.append(
         Car(coorX=x, coorY=y, direction=line[2], color=BLUE, signal_no=line[3]))
     signals[line[3][0]].number_of_cars += 1
-
 
 def draw_valid_points():
     for i in valid_points_to_generate:
@@ -426,25 +430,34 @@ def draw_road():
 def extend_barrier():
     for sig in signals:
         if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
+            # sig_n = sig.road_no
+            # print(sig.barrier[0])
+            # if sig.road_no != 0:
+            #     sig.barrier[0][0][0] += sig.coors[0][0][2][0]
+            #     sig.barrier[0][1][0] += sig.coors[0][0][2][0]
+            #     sig.barrier[0][0][1] += sig.coors[0][0][2][1]
+            #     sig.barrier[0][1][1] += sig.coors[0][0][2][1]
             continue
         sig.barrier[0][0] += sig.coors[0][2][0]
         sig.barrier[1][0] += sig.coors[0][2][0]
         sig.barrier[0][1] += sig.coors[0][2][1]
         sig.barrier[1][1] += sig.coors[0][2][1]
+        sig.counter += 1
 
 
 def reset_barrier():
     for sig in signals:
         if sig.road_no == 5 or sig.road_no == 6 or sig.road_no == 0:
             continue
-        sig.barrier[0][0] -= 9*sig.coors[0][2][0]
-        sig.barrier[1][0] -= 9*sig.coors[0][2][0]
-        sig.barrier[0][1] -= 9*sig.coors[0][2][1]
-        sig.barrier[1][1] -= 9*sig.coors[0][2][1]
+        sig.barrier[0][0] -= sig.counter*sig.coors[0][2][0]
+        sig.barrier[1][0] -= sig.counter*sig.coors[0][2][0]
+        sig.barrier[0][1] -= sig.counter*sig.coors[0][2][1]
+        sig.barrier[1][1] -= sig.counter*sig.coors[0][2][1]
+        sig.counter = 0
 
 
 running = True
-image = pygame.image.load(r'mywork/road1.png')
+image = pygame.image.load(r'mywork/road.png')
 car = pygame.image.load(r'car_1.png')
 start_time = time()
 
@@ -452,25 +465,29 @@ initialize_padding()
 initialize_signals()
 
 
-def flip_signal():
-    for idx in range(1, len(signals)):
-        if signals[idx].isRed:
-            signals[idx].barrier = signals[idx].static_barrier
-            signals[idx].reset()
-            wait_array[idx] = 0
-        signals[idx].isRed ^= True
-
+# def flip_signal():
+#     for idx in range(1, len(signals)):
+#         if signals[idx].isRed:
+#             signals[idx].barrier = signals[idx].static_barrier
+#             signals[idx].reset()
+#             wait_array[idx] = 0
+#         signals[idx].isRed ^= True
 
 wait_array = 20*[0]
+def flip_caller():
+    isRed = flip_signal(wait_array=wait_array)
+    for i in range(1, 19):
+        signals[i].isRed = isRed[i]
+        signals[i].queue = []
 
 
 def increment_wait_time():
     global wait_array
     for sig in signals:
-        wait_array[sig.road_no] += sig.number_of_cars
-
+        wait_array[sig.road_no] = sig.number_of_cars
 
 timer = 1
+start_time_barrier = time()
 
 while running:
     screen.blit(image, (0, 0))
@@ -488,13 +505,14 @@ while running:
         rand_car()
         timer += 1
         increment_wait_time()
-        extend_barrier()
         start_time = now_time
+    if now_time - start_time_barrier >= 0.2:
+        extend_barrier()
+        start_time_barrier = now_time
     render_existing_cars()
     render_signals()
-    draw_road()
-    if timer % 10 == 0:
+    if timer % 7 == 0:
         timer += 1
-        flip_signal()
+        flip_caller()
         reset_barrier()
     pygame.display.update()

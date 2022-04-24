@@ -1,22 +1,20 @@
-# import numpy as np
+def flip_signal(wait_array):
+    isRed = [False]*19
+    for i in range(1, 19, 2):
+        sig1 = wait_array[i]
+        sig2 = wait_array[i+1]
+        if sig1 <= sig2:
+            isRed[i] = True
+        else:
+            isRed[i+1] = True
+    return isRed
 
-# '''
-# parameters used
-# D => distance matrix where d(u, v) time required moving from edge u to edge v
-# f => this a matrix which denotes the number of vehicles moving from signal u to signal v in one T cycle
-# B => boolean matrix which denotes the corresponding color of the signal of the traffic light at time t(v)
-# '''
+
+# def branching_and_bounding(lb, root):
+#     time = lb[root]
+
+#     for j in range(2, len(lb), 1):
 
 
-
-# D = np.matrix([])
-# f = np.matrix([])
-# B = np.matrix([])
-# t = np.array([])
-
-# T = 4
-
-# # def heurestic(i, v):
+# def branching(node, lb):
     
-import time 
-print(time.time())
