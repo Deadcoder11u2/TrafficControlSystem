@@ -1,10 +1,9 @@
 from random import random
-# from tkinter import Button
 import pygame
 from time import time
 from random import *
 import random
-from main import flip_signal
+from main import branching_and_bounding
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -13,8 +12,6 @@ CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
-
-
 
 # Initialize the game
 pygame.init()
@@ -196,6 +193,7 @@ def initialize_padding():
         vertical_paddings.append(
             Padding(fPoint=line[0], sPoint=line[1], padDist=line[3], directionList=line[2]))
 
+from main import flip_signal
 
 signals = []
 
@@ -352,7 +350,6 @@ def render_existing_cars():
         try:
             pygame.draw.line(screen, MAGENTA, tuple(
                 barrier[0]), tuple(barrier[1]), 2)
-            # hello = 10
         except:   
             hello = 1
         car.coorX, car.coorY = x, y
@@ -393,6 +390,10 @@ def rand_car():
     placed_cars.append(
         Car(coorX=x, coorY=y, direction=line[2], color=BLUE, signal_no=line[3]))
     signals[line[3][0]].number_of_cars += 1
+
+def branch_and_bound_caller():
+    for root in 9:
+        signals[root].red_time = branching_and_bounding(root)
 
 def draw_valid_points():
     for i in valid_points_to_generate:
@@ -524,11 +525,10 @@ initialize_signals()
 wait_array = 20*[0]
 def flip_caller():
     isRed = flip_signal(wait_array=wait_array)
-    # print(isRed)
     for i in range(1, 19):
         signals[i].isRed = isRed[i]
         signals[i].queue = []
-        signals[i].number_of_cars = 0
+        # signals[i].number_of_cars = 0
 
 
 def increment_wait_time():
