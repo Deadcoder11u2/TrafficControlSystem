@@ -1,4 +1,5 @@
 from random import random
+# from tkinter import Button
 import pygame
 from time import time
 from random import *
@@ -13,15 +14,48 @@ MAGENTA = (255, 0, 255)
 SILVER = (192, 192, 192)
 LIME = (124, 255, 0)
 
+
+
 # Initialize the game
 pygame.init()
+
+enabled = 20*[False]
 
 # Creating the screen
 screen = pygame.display.set_mode((1245, 636))
 
 maxCapBarrier = 1
 
+class Button:
+    """Create a button, then blit the surface in the while loop"""
 
+    def __init__(self, text,  pos, font, bg="black", feedback=""):
+        self.x, self.y = pos
+        self.font = pygame.font.SysFont("Arial", font)
+        if feedback == "":
+            self.feedback = "text"
+        else:
+            self.feedback = feedback
+        self.change_text(text, bg)
+
+    def change_text(self, text, bg="black"):
+        """Change the text whe you click"""
+        self.text = self.font.render(text, 1, pygame.Color("White"))
+        self.size = self.text.get_size()
+        self.surface = pygame.Surface(self.size)
+        self.surface.fill(bg)
+        self.surface.blit(self.text, (0, 0))
+        self.rect = pygame.Rect(self.x, self.y, self.size[0], self.size[1])
+
+    def show(self, x):
+        screen.blit(x.surface, (self.x, self.y))
+
+    def click(self, event, idx):
+        x, y = pygame.mouse.get_pos()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.mouse.get_pressed()[0]:
+                if self.rect.collidepoint(x, y):
+                    enabled[idx] ^= True
 class Signal:
     def __init__(self, isRed, road_no, coors, barrier):
         self.coors = coors
@@ -346,6 +380,8 @@ valid_points_to_generate = [
 
 def rand_car():
     idx = randint(0, len(valid_points_to_generate) - 1)
+    if not enabled[idx]:
+        return
     line = valid_points_to_generate[idx]
     x, y = -1, -1
     if line[2] == "V":
@@ -488,7 +524,7 @@ initialize_signals()
 wait_array = 20*[0]
 def flip_caller():
     isRed = flip_signal(wait_array=wait_array)
-    print(isRed)
+    # print(isRed)
     for i in range(1, 19):
         signals[i].isRed = isRed[i]
         signals[i].queue = []
@@ -503,13 +539,106 @@ def increment_wait_time():
 timer = 1
 start_time_barrier = time()
 
+button1 = Button(
+    "1",
+    (214, 509),
+    font=30,
+    bg="navy",
+    feedback="1 disabled"
+)
+button2 = Button(
+    "2",
+    (253, 509),
+    font=30,
+    bg="navy",
+    feedback="2 disabled"
+)
+button3 = Button(
+    "3",
+    (290, 509),
+    font=30,
+    bg="navy",
+    feedback="3 disabled"
+)
+button4 = Button(
+    "4",
+    (330, 509),
+    font=30,
+    bg="navy",
+    feedback="4 disabled"
+)
+button5 = Button(
+    "5",
+    (370, 509),
+    font=30,
+    bg="navy",
+    feedback="5 disabled"
+)
+
+button6 = Button(
+    "6",
+    (400, 509),
+    font=30,
+    bg="navy",
+    feedback="1 disabled"
+)
+button7 = Button(
+    "7",
+    (430, 509),
+    font=30,
+    bg="navy",
+    feedback="2 disabled"
+)
+button8 = Button(
+    "8",
+    (460, 509),
+    font=30,
+    bg="navy",
+    feedback="3 disabled"
+)
+button9 = Button(
+    "9",
+    (490, 509),
+    font=30,
+    bg="navy",
+    feedback="4 disabled"
+)
+button10 = Button(
+    "10",
+    (520, 509),
+    font=30,
+    bg="navy",
+    feedback="5 disabled"
+)
+
 while running:
     screen.blit(image, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             break
+        button1.click(event, 1)
+        button2.click(event, 2)
+        button3.click(event, 3)
+        button4.click(event, 4)
+        button5.click(event, 5)
+        button6.click(event, 6)
+        button7.click(event, 7)
+        button8.click(event, 8)
+        button9.click(event, 9)
+        button10.click(event, 10)
+        
     now_time = time()
+    button1.show(button1)
+    button2.show(button2)
+    button3.show(button3)
+    button4.show(button4)
+    button5.show(button5)
+    button6.show(button6)
+    button7.show(button7)
+    button8.show(button8)
+    button9.show(button9)
+    button10.show(button10)
     if(now_time - start_time > 1):
         rand_car()
         rand_car()
