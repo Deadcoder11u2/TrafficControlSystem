@@ -29,7 +29,7 @@ def lower_bound(p, c, signal_no):
 
 def branching_and_bounding(root, active_nodes, isRed, c, p):
     time = lower_bound(root)
-    branching(root, c, len(p[2*root.idx]), len2*root.idx, root.idx)
+    branching(root, c, len(p[2*root.idx]), len(p[root.idx]), root.idx)
     for i in range(2, 9, 1):
         time = min(lower_bound(root.left_note), lower_bound(root.right_node))
     for i in range(active_nodes):

@@ -62,7 +62,7 @@ class Signal:
         self.number_of_cars = 0
         self.barrier = list(barrier).copy()
         self.static_barrier = list(barrier).copy()
-        self.cap_of_barrier = maxCapBarrier
+        self.cap_of_barrier = 0
         self.hori_delta = 0
         self.veri_delta = 0
         self.counter = 0
@@ -244,7 +244,9 @@ def render_signals():
         for i in sig.coors:
             if sig.isRed:
                 pygame.draw.circle(screen, RED, (i[0], i[1]), 20, 30)
+                # screen.blit()
             else:
+                # screen.blit()
                 pygame.draw.circle(screen, GREEN, (i[0], i[1]), 20, 30)
 
 
@@ -391,9 +393,18 @@ def rand_car():
         Car(coorX=x, coorY=y, direction=line[2], color=BLUE, signal_no=line[3]))
     signals[line[3][0]].number_of_cars += 1
 
+from main import node
+
 def branch_and_bound_caller():
+    p = []
+    for sig in signals:
+        p.append(sig.queue)
     for root in 9:
-        signals[root].red_time = branching_and_bounding(root)
+        active_nodes = []
+        temp = node()
+        temp.idx = root
+        active_nodes.append(temp)
+        signals[root].red_time = branching_and_bounding(temp, active_nodes, p)
 
 def draw_valid_points():
     for i in valid_points_to_generate:
@@ -513,15 +524,6 @@ start_time = time()
 initialize_padding()
 initialize_signals()
 
-
-# def flip_signal():
-#     for idx in range(1, len(signals)):
-#         if signals[idx].isRed:
-#             signals[idx].barrier = signals[idx].static_barrier
-#             signals[idx].reset()
-#             wait_array[idx] = 0
-#         signals[idx].isRed ^= True
-
 wait_array = 20*[0]
 def flip_caller():
     isRed = flip_signal(wait_array=wait_array)
@@ -626,7 +628,6 @@ while running:
         button7.click(event, 7)
         button8.click(event, 8)
         button9.click(event, 9)
-        button10.click(event, 10)
     # for padding in horizontal_paddings:
     #     padding.draw_hori_padding()
     # for padding in vertical_paddings:
@@ -641,7 +642,6 @@ while running:
     button7.show(button7)
     button8.show(button8)
     button9.show(button9)
-    button10.show(button10)
     if(now_time - start_time > 1):
         rand_car()
         rand_car()
