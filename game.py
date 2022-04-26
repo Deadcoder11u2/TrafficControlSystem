@@ -627,7 +627,10 @@ while running:
         button8.click(event, 8)
         button9.click(event, 9)
         button10.click(event, 10)
-        
+    # for padding in horizontal_paddings:
+    #     padding.draw_hori_padding()
+    # for padding in vertical_paddings:
+    #     padding.draw_veri_padding()
     now_time = time()
     button1.show(button1)
     button2.show(button2)

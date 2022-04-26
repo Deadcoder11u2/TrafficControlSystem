@@ -10,9 +10,10 @@ def flip_signal(wait_array):
     return isRed
 
 class node:
-    def __init__(self, right, left):
+    def __init__(self, right, left, idx):
         self.right = right
         self.left = left
+        self.idx = idx
 
     def __init__(self) -> None:
         self.right = None
@@ -28,7 +29,7 @@ def lower_bound(p, c, signal_no):
 
 def branching_and_bounding(root, active_nodes, isRed, c, p):
     time = lower_bound(root)
-    branching(root, c, )
+    branching(root, c, len(p[2*root.idx]), len2*root.idx, root.idx)
     for i in range(2, 9, 1):
         time = min(lower_bound(root.left_note), lower_bound(root.right_node))
     for i in range(active_nodes):
